@@ -142,6 +142,7 @@
         <label for="show_flats" style="margin:0;text-transform:none;letter-spacing:0;color:var(--ink);font-size:12px;">Show cutting layout & labels</label>
       </div>
       <button id="dl_dxf" style="margin-top:10px;width:100%;background:var(--accent);color:#1a1c22;border:none;border-radius:6px;padding:8px 10px;font-size:12px;font-weight:600;cursor:pointer;">Download DXF</button>
+      <button id="ai_render" title="Generate a photorealistic render using fal.ai FLUX Â· ~$0.005/image" style="margin-top:8px;width:100%;background:linear-gradient(135deg,#a855f7,#6366f1);color:#fff;border:none;border-radius:6px;padding:8px 10px;font-size:12px;font-weight:600;cursor:pointer;letter-spacing:.02em;">â¨ AI Render</button>
       <div id="rib_lengths" style="margin-top:12px;font-size:11px;color:var(--muted);max-height:160px;overflow-y:auto;font-variant-numeric:tabular-nums;"></div>
     </div>
   </div>
@@ -416,7 +417,7 @@ scene.add(flatGroup);
 // Materials for flat patterns
 const flatLineMat = new THREE.LineBasicMaterial({ color: 0xff8866 });
 const flatFillMat = new THREE.MeshStandardMaterial({
-  color: 0x1a1c22, side: THREE.DoubleSide, roughness: 0.9, metalness: 0.0,
+  color: 0xd2b48c, side: THREE.DoubleSide, roughness: 0.95, metalness: 0.0,
 });
 
 // âââ Hinge-unroll a quad strip between two ribs into 2D âââ
@@ -645,38 +646,40 @@ function buildFlats(p, ribs, panelDefs) {
     pcx /= panel.outline.length; pcy /= panel.outline.length;
 
     const theta = panelAngle(panel);
-    // Radial outward unit vector in world XZ (lamp coord convention)
+    // Radial outward unit vector in world XZ
     const rx = Math.cos(theta), rz = -Math.sin(theta);
     // Tangent unit vector (CCW around lamp axis)
     const tx = -Math.sin(theta), tz = -Math.cos(theta);
     const center = { x: floorR * rx, z: floorR * rz };
 
-    // Map a panel-local 2D point (px,py) to a world position on the floor.
-    // Panel x â tangent direction; panel y (along-rib) â radial outward.
+    // Panels lie FLAT on the floor (Y=0 plane).
+    // Panel-X (width, across-rib) â tangential direction in XZ
+    // Panel-Y (height, along-rib) â radial direction outward in XZ
+    // dy â height above floor (Y axis)
     const toWorld = (px, py, dy) => {
-      const lx = px - pcx;
-      const ly = py - pcy;
+      const lx = px - pcx;  // across-rib â tangential
+      const ly = py - pcy;  // along-rib â radial outward
       return new THREE.Vector3(
         center.x + lx * tx + ly * rx,
-        yPlane + (dy || 0),
+        (dy || 0),
         center.z + lx * tz + ly * rz
       );
     };
 
-    // Outline line
-    const linePts = panel.outline.map(o => toWorld(o.x, o.y, 0));
+    // Outline line (slightly above floor so it's always visible)
+    const linePts = panel.outline.map(o => toWorld(o.x, o.y, 2));
     linePts.push(linePts[0].clone());
     const lineGeo = new THREE.BufferGeometry().setFromPoints(linePts);
     flatGroup.add(new THREE.Line(lineGeo, flatLineMat));
 
-    // Filled flat panel mesh
+    // Filled flat panel mesh (just above floor)
     const segs = panel.n - 1;
     const positions = new Float32Array((segs + 1) * 2 * 3);
     for (let j = 0; j <= segs; j++) {
       const pa = panel.flat[j * 2];
       const pb = panel.flat[j * 2 + 1];
-      const wa = toWorld(pa.x, pa.y, -0.05);
-      const wb = toWorld(pb.x, pb.y, -0.05);
+      const wa = toWorld(pa.x, pa.y, 1);
+      const wb = toWorld(pb.x, pb.y, 1);
       positions[j*6+0] = wa.x; positions[j*6+1] = wa.y; positions[j*6+2] = wa.z;
       positions[j*6+3] = wb.x; positions[j*6+4] = wb.y; positions[j*6+5] = wb.z;
     }
@@ -692,15 +695,15 @@ function buildFlats(p, ribs, panelDefs) {
     geo.computeVertexNormals();
     flatGroup.add(new THREE.Mesh(geo, flatFillMat));
 
-    // Panel number sprite â centered on the flat panel
-    const numPos = toWorld(pcx, pcy, 6);
+    // Panel number sprite â centered on the flat panel, above floor
+    const numPos = toWorld(pcx, pcy, 20);
     const numSprite = makeTextSprite(String(i + 1), { color: '#ffffff', bg: 'rgba(255,106,74,0.9)', worldSize: Math.min(panel.h * 0.35, 35) });
     numSprite.position.copy(numPos);
     flatGroup.add(numSprite);
 
-    // Rib-pair label: e.g. "AâB" â slightly outward from center along radial
-    const labelPos = toWorld(pcx, pcy + panel.h * 0.35, 5);
-    const labelSprite = makeTextSprite(ribLetter(panel.def.a) + 'â' + ribLetter(panel.def.b), { color: '#ffd8c6', bg: 'rgba(20,22,28,0.8)', worldSize: Math.min(panel.h * 0.18, 18) });
+    // Rib-pair label: e.g. "AâB" â toward outer edge of panel
+    const labelPos = toWorld(pcx, pcy + panel.h * 0.35, 18);
+    const labelSprite = makeTextSprite(ribLetter(panel.def.a) + 'â' + ribLetter(panel.def.b), { color: '#1a1c22', bg: 'rgba(210,180,140,0.85)', worldSize: Math.min(panel.h * 0.18, 18) });
     labelSprite.position.copy(labelPos);
     flatGroup.add(labelSprite);
   }
@@ -875,7 +878,51 @@ function rebuild() {
 for (const id of ids) {
   document.getElementById(id).addEventListener('input', rebuild);
 }
-document.getElementById('show_flats').addEventListener('change', rebuild);
+document.getElementById('show_flats').addEventListener('change', () => {
+  rebuild();
+  if (document.getElementById('show_flats').checked) {
+    goTopView();
+  } else {
+    goDefaultView();
+  }
+});
+
+// âââ Camera view helpers âââ
+function animateCamera(toPos, toTarget, toUp, duration) {
+  duration = duration || 800;
+  const startPos = camera.position.clone();
+  const startTarget = controls.target.clone();
+  const startUp = camera.up.clone();
+  const t0 = performance.now();
+  function step(now) {
+    const t = Math.min((now - t0) / duration, 1);
+    const e = t < 0.5 ? 2*t*t : -1+(4-2*t)*t; // ease in-out
+    camera.position.lerpVectors(startPos, toPos, e);
+    controls.target.lerpVectors(startTarget, toTarget, e);
+    camera.up.lerpVectors(startUp, toUp, e).normalize();
+    controls.update();
+    if (t < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+function goTopView() {
+  animateCamera(
+    new THREE.Vector3(0, 1600, 1),   // high above, tiny Z to avoid gimbal
+    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(0, 0, -1),     // Z-back is "up" in top view
+    900
+  );
+}
+
+function goDefaultView() {
+  animateCamera(
+    new THREE.Vector3(700, 500, 700),
+    new THREE.Vector3(0, 220, 0),
+    new THREE.Vector3(0, 1, 0),
+    800
+  );
+}
 
 // âââ DXF export âââ
 function buildDXF(layout) {
@@ -1002,6 +1049,125 @@ function tick() {
   requestAnimationFrame(tick);
 }
 tick();
+
+// âââ AI Render âââ
+(function() {
+  const KEY_LS = 'lamp_fal_key';
+  let apiKey = '';
+  try { apiKey = localStorage.getItem(KEY_LS) || ''; } catch(e) {}
+
+  document.getElementById('ai_render').addEventListener('click', async () => {
+    let key = apiKey;
+    if (!key) {
+      key = prompt('Enter your fal.ai API key\n(Get one free at fal.ai â FLUX img2img, ~$0.005/render):');
+      if (!key) return;
+      apiKey = key;
+      try { localStorage.setItem(KEY_LS, key); } catch(e) {}
+    }
+
+    const modal = document.getElementById('ai_modal');
+    const status = document.getElementById('ai_status');
+    const imgEl  = document.getElementById('ai_result');
+    const snapEl = document.getElementById('ai_snap');
+
+    modal.style.display = 'flex';
+    imgEl.style.display = 'none';
+    imgEl.src = '';
+    status.textContent = 'Capturing sceneâ¦';
+
+    // Snapshot the Three.js canvas
+    try {
+      renderer.render(scene, camera);
+    } catch(e) {}
+    const srcCanvas = renderer.domElement;
+    snapEl.width  = srcCanvas.width;
+    snapEl.height = srcCanvas.height;
+    snapEl.getContext('2d').drawImage(srcCanvas, 0, 0);
+
+    try {
+      status.textContent = 'Uploading snapshot to fal.aiâ¦';
+      const blob = await new Promise((res, rej) => {
+        srcCanvas.toBlob(b => b ? res(b) : rej(new Error('toBlob failed')), 'image/png');
+      });
+
+      // Upload image to fal.ai storage â returns a CDN URL
+      const fd = new FormData();
+      fd.append('file', blob, 'lamp.png');
+      const upRes = await fetch('https://fal.run/storage/upload', {
+        method: 'POST',
+        headers: { 'Authorization': `Key ${key}` },
+        body: fd
+      });
+      if (!upRes.ok) {
+        const t = await upRes.text();
+        throw new Error(`Upload ${upRes.status}: ${t.slice(0,120)}`);
+      }
+      const { url: imageUrl } = await upRes.json();
+
+      status.textContent = 'Running FLUX img2img (may take ~10 s)â¦';
+      const genRes = await fetch('https://fal.run/fal-ai/flux/dev/image-to-image', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Key ${key}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          image_url: imageUrl,
+          prompt: 'Photorealistic professional product photograph of a hanging sculptural pendant lamp. Translucent washi paper or natural mulberry fiber panels glowing warmly from within with a soft amber and golden backlit glow. Thin bent wood veneer or rattan curved ribs tracing organic flowing curves across the surface. Suspended by a thin brushed-metal cable from above. Studio photography against a smooth neutral grey gradient background. Soft diffused studio lighting, subtle shadow beneath. Ultra-sharp focus, 4k product render quality.',
+          negative_prompt: 'blurry, cartoon, painting, flat, 2d, sketch, distorted, ugly, low quality',
+          strength: 0.68,
+          num_inference_steps: 28,
+          guidance_scale: 3.5,
+          image_size: 'square_hd',
+          seed: Math.floor(Math.random() * 1e9)
+        })
+      });
+      if (!genRes.ok) {
+        const t = await genRes.text();
+        throw new Error(`Generate ${genRes.status}: ${t.slice(0,200)}`);
+      }
+      const result = await genRes.json();
+      const outUrl = result.images?.[0]?.url;
+      if (!outUrl) throw new Error('No image in response: ' + JSON.stringify(result).slice(0,200));
+
+      imgEl.onload = () => { imgEl.style.display = 'block'; };
+      imgEl.src = outUrl;
+      status.textContent = 'â Done â right-click image to save';
+    } catch (e) {
+      status.textContent = 'â ' + e.message;
+      console.error('AI Render error:', e);
+    }
+  });
+
+  document.getElementById('ai_close').addEventListener('click', () => {
+    document.getElementById('ai_modal').style.display = 'none';
+  });
+  // Close on backdrop click
+  document.getElementById('ai_modal').addEventListener('click', function(e) {
+    if (e.target === this) this.style.display = 'none';
+  });
+})();
 </script>
+
+<!-- AI Render modal -->
+<div id="ai_modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9999;align-items:center;justify-content:center;flex-direction:column;gap:16px;">
+  <div style="position:relative;background:#1a1c22;border:1px solid #2e3040;border-radius:14px;padding:24px 20px 18px;max-width:95vmin;max-height:92vh;overflow:auto;display:flex;flex-direction:column;align-items:center;gap:14px;">
+    <button id="ai_close" style="position:absolute;top:10px;right:13px;background:none;border:none;color:#aaa;font-size:22px;line-height:1;cursor:pointer;" title="Close">â</button>
+    <h3 style="margin:0;color:#fff;font-size:14px;font-weight:700;letter-spacing:.04em;">â¨ AI RENDER</h3>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center;align-items:flex-start;">
+      <div style="text-align:center;">
+        <div style="font-size:10px;color:#666;margin-bottom:5px;letter-spacing:.06em;text-transform:uppercase;">3D Preview</div>
+        <canvas id="ai_snap" style="max-width:360px;max-height:360px;width:100%;border-radius:8px;display:block;"></canvas>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:10px;color:#666;margin-bottom:5px;letter-spacing:.06em;text-transform:uppercase;">AI Render</div>
+        <img id="ai_result" style="max-width:360px;max-height:360px;width:100%;border-radius:8px;display:none;object-fit:contain;" alt="AI generated render">
+      </div>
+    </div>
+    <div id="ai_status" style="color:#bbb;font-size:12px;text-align:center;min-height:18px;font-style:italic;"></div>
+    <div style="font-size:10px;color:#444;text-align:center;line-height:1.4;">Powered by <b style="color:#666;">fal.ai</b> Â· FLUX.1-dev img2img Â· ~$0.005/render<br>API key stored locally in your browser</div>
+  </div>
+</div>
+
 </body>
 </html>
