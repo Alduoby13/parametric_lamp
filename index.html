@@ -87,10 +87,10 @@
     <p class="sub">Live parametric model â same brain as the Grasshopper file.</p>
 
     <div class="row">
-      <label>Style <span class="val" id="v_style">0</span></label>
+      <label>Style <span class="val" id="v_style">1</span></label>
       <select id="style">
         <option value="0">0 â Noguchi Flame</option>
-        <option value="1">1 â Smooth Teardrop</option>
+        <option value="1" selected>1 â Smooth Teardrop</option>
         <option value="2">2 â Inverted Drop</option>
         <option value="3">3 â Open Top</option>
         <option value="4">4 â Asymmetric Pear</option>
@@ -104,25 +104,25 @@
 
     <div class="group">
       <div class="group-title">Geometry</div>
-      <div class="row"><label>Ribs <span class="val" id="v_n_ribs">14</span></label><input type="range" id="n_ribs" min="4" max="30" value="14" step="1"></div>
-      <div class="row"><label>Resolution <span class="val" id="v_n_pts">60</span></label><input type="range" id="n_pts" min="20" max="100" value="60" step="1"></div>
-      <div class="row"><label>Height <span class="val" id="v_height">420</span></label><input type="range" id="height" min="100" max="1000" value="420" step="1"></div>
-      <div class="row"><label>Max Radius <span class="val" id="v_max_r">103</span></label><input type="range" id="max_r" min="50" max="300" value="103" step="1"></div>
+      <div class="row"><label>Ribs <span class="val" id="v_n_ribs">10</span></label><input type="range" id="n_ribs" min="4" max="30" value="10" step="1"></div>
+      <div class="row"><label>Resolution <span class="val" id="v_n_pts">100</span></label><input type="range" id="n_pts" min="20" max="100" value="100" step="1"></div>
+      <div class="row"><label>Height <span class="val" id="v_height">430</span></label><input type="range" id="height" min="100" max="1000" value="430" step="1"></div>
+      <div class="row"><label>Max Radius <span class="val" id="v_max_r">118</span></label><input type="range" id="max_r" min="50" max="300" value="118" step="1"></div>
       <div class="row"><label>Twist Â° <span class="val" id="v_twist_deg">120</span></label><input type="range" id="twist_deg" min="0" max="360" value="120" step="1"></div>
     </div>
 
     <div class="group">
       <div class="group-title">Organic shape</div>
-      <div class="row"><label>Irregularity <span class="val" id="v_irregularity">0.55</span></label><input type="range" id="irregularity" min="0" max="1" value="0.55" step="0.01"></div>
-      <div class="row"><label>Asymmetry <span class="val" id="v_asymmetry">0.15</span></label><input type="range" id="asymmetry" min="0" max="1" value="0.15" step="0.01"></div>
-      <div class="row"><label>Bulge position <span class="val" id="v_bulge_pos">0.35</span></label><input type="range" id="bulge_pos" min="0.1" max="0.9" value="0.35" step="0.01"></div>
+      <div class="row"><label>Irregularity <span class="val" id="v_irregularity">0.69</span></label><input type="range" id="irregularity" min="0" max="1" value="0.69" step="0.01"></div>
+      <div class="row"><label>Asymmetry <span class="val" id="v_asymmetry">0.19</span></label><input type="range" id="asymmetry" min="0" max="1" value="0.19" step="0.01"></div>
+      <div class="row"><label>Bulge position <span class="val" id="v_bulge_pos">0.72</span></label><input type="range" id="bulge_pos" min="0.1" max="0.9" value="0.72" step="0.01"></div>
       <div class="row"><label>Openness <span class="val" id="v_openness">0</span></label><input type="range" id="openness" min="0" max="1" value="0" step="0.01"></div>
     </div>
 
     <div class="group">
       <div class="group-title">Waves & spiral</div>
       <div class="row"><label>Spacing wave <span class="val" id="v_spacing_wave">0.6</span></label><input type="range" id="spacing_wave" min="0" max="1" value="0.6" step="0.01"></div>
-      <div class="row"><label>Rib wave <span class="val" id="v_rib_wave">0.4</span></label><input type="range" id="rib_wave" min="0" max="1" value="0.4" step="0.01"></div>
+      <div class="row"><label>Rib wave <span class="val" id="v_rib_wave">0.53</span></label><input type="range" id="rib_wave" min="0" max="1" value="0.53" step="0.01"></div>
       <div class="row"><label>Wave freq <span class="val" id="v_wave_freq">2</span></label><input type="range" id="wave_freq" min="0.5" max="5" value="2" step="0.1"></div>
       <div class="row"><label>Golden spiral <span class="val" id="v_golden_spiral">0.3</span></label><input type="range" id="golden_spiral" min="0" max="1" value="0.3" step="0.01"></div>
     </div>
@@ -131,7 +131,8 @@
       <div class="group-title">Taper & ribs</div>
       <div class="row"><label>Taper top <span class="val" id="v_taper_top">0.2</span></label><input type="range" id="taper_top" min="0" max="1" value="0.2" step="0.01"></div>
       <div class="row"><label>Taper bottom <span class="val" id="v_taper_bot">0.15</span></label><input type="range" id="taper_bot" min="0" max="1" value="0.15" step="0.01"></div>
-      <div class="row"><label>Rib thickness <span class="val" id="v_rib_thick">2</span></label><input type="range" id="rib_thick" min="0" max="10" value="2" step="0.1"></div>
+      <div class="row"><label>Rib thickness <span class="val" id="v_rib_thick">2.7</span></label><input type="range" id="rib_thick" min="0" max="10" value="2.7" step="0.1"></div>
+      <div class="row"><label>Rib location <span class="val" id="v_rib_loc">1.00</span></label><input type="range" id="rib_loc" min="-1" max="1" value="1" step="0.05"></div>
     </div>
 
     <div class="group">
@@ -567,30 +568,66 @@ function buildFlats(p, ribs, panelDefs) {
     if (panel.h > rowMaxH) rowMaxH = panel.h;
   }
 
-  // Global bbox to center the layout behind the lamp
-  let gMinX = Infinity, gMaxX = -Infinity, gMinY = Infinity, gMaxY = -Infinity;
+  // Global bbox to center the layout behind the lamp (used by DXF only)
+  let gMinX = Infinity, gMaxX = -Infinity;
   for (let i = 0; i < panels.length; i++) {
     const pl = placements[i];
     for (const pt of panels[i].outline) {
       const x = pt.x + pl.x;
-      const y = pt.y + pl.y;
       if (x < gMinX) gMinX = x; if (x > gMaxX) gMaxX = x;
-      if (y < gMinY) gMinY = y; if (y > gMaxY) gMaxY = y;
     }
   }
   const cx = (gMinX + gMaxX) / 2;
-  const zStart = -(p.max_r * 1.8);
-  const czOffset = zStart - gMaxY;
   const yPlane = 0.6;
 
-  // Remember the 2D layout (in "layout space", y-flipped for DXF export)
+  // ââ 3D rendering: lay panels in a circle on the floor around the lamp,
+  // each at the same angular position as its original 3D panel,
+  // "projected" straight down. ââ
+  // Compute each panel's 3D angular position (lamp coords: pt = (rÂ·cos a, z, -rÂ·sin a)).
+  function panelAngle(panel) {
+    const midJ = Math.floor((panel.def.jStart + panel.def.jEnd) / 2);
+    const ra = ribs[panel.def.a][midJ];
+    const rb = ribs[panel.def.b][midJ];
+    const aa = Math.atan2(-ra.z, ra.x);
+    const ab = Math.atan2(-rb.z, rb.x);
+    let diff = ab - aa;
+    while (diff > Math.PI) diff -= 2 * Math.PI;
+    while (diff < -Math.PI) diff += 2 * Math.PI;
+    return aa + diff / 2;
+  }
+
+  // Floor radius: just outside the lamp's max footprint
+  let maxLampR = 0;
+  for (let i = 0; i < ribs.length; i++) {
+    for (let j = 0; j < ribs[i].length; j++) {
+      const v = ribs[i][j];
+      const r = Math.hypot(v.x, v.z);
+      if (r > maxLampR) maxLampR = r;
+    }
+  }
+  // Find largest panel half-width to leave breathing room
+  let maxHalfW = 0, maxFullW = 0;
+  for (const pn of panels) {
+    maxHalfW = Math.max(maxHalfW, pn.w / 2);
+    maxFullW = Math.max(maxFullW, pn.w);
+  }
+  // Push floor radius out far enough that adjacent panels don't overlap
+  // angularly. Each panel occupies an arc â floorR * (2Ï / N); we need that
+  // arc to be â¥ panel width plus a small margin.
+  const N = Math.max(panels.length, 1);
+  const angularSlice = (2 * Math.PI) / N;
+  const floorRBase = maxLampR + maxHalfW + 30;
+  const floorRNoOverlap = (maxFullW + 25) / angularSlice;
+  const floorR = Math.max(floorRBase, floorRNoOverlap);
+
+  // Remember the 2D layout (in "layout space", for DXF export)
   const dxfPanels = [];
 
   for (let i = 0; i < panels.length; i++) {
     const pl = placements[i];
     const panel = panels[i];
 
-    // Layout-space outline (always computed, for DXF)
+    // Layout-space outline (always computed, for DXF â flat row-packed grid)
     const outline2D = [];
     for (const pt of panel.outline) {
       const lx = pt.x + pl.x - cx;
@@ -601,8 +638,33 @@ function buildFlats(p, ribs, panelDefs) {
 
     if (!render) continue;
 
+    // ââ Circular floor placement for 3D rendering ââ
+    // Centroid of panel in its own flat coords
+    let pcx = 0, pcy = 0;
+    for (const pt of panel.outline) { pcx += pt.x; pcy += pt.y; }
+    pcx /= panel.outline.length; pcy /= panel.outline.length;
+
+    const theta = panelAngle(panel);
+    // Radial outward unit vector in world XZ (lamp coord convention)
+    const rx = Math.cos(theta), rz = -Math.sin(theta);
+    // Tangent unit vector (CCW around lamp axis)
+    const tx = -Math.sin(theta), tz = -Math.cos(theta);
+    const center = { x: floorR * rx, z: floorR * rz };
+
+    // Map a panel-local 2D point (px,py) to a world position on the floor.
+    // Panel x â tangent direction; panel y (along-rib) â radial outward.
+    const toWorld = (px, py, dy) => {
+      const lx = px - pcx;
+      const ly = py - pcy;
+      return new THREE.Vector3(
+        center.x + lx * tx + ly * rx,
+        yPlane + (dy || 0),
+        center.z + lx * tz + ly * rz
+      );
+    };
+
     // Outline line
-    const linePts = outline2D.map(o => new THREE.Vector3(o.x, yPlane, o.y + czOffset));
+    const linePts = panel.outline.map(o => toWorld(o.x, o.y, 0));
     linePts.push(linePts[0].clone());
     const lineGeo = new THREE.BufferGeometry().setFromPoints(linePts);
     flatGroup.add(new THREE.Line(lineGeo, flatLineMat));
@@ -613,12 +675,10 @@ function buildFlats(p, ribs, panelDefs) {
     for (let j = 0; j <= segs; j++) {
       const pa = panel.flat[j * 2];
       const pb = panel.flat[j * 2 + 1];
-      positions[j*6+0] = pa.x + pl.x - cx;
-      positions[j*6+1] = yPlane - 0.05;
-      positions[j*6+2] = pa.y + pl.y + czOffset;
-      positions[j*6+3] = pb.x + pl.x - cx;
-      positions[j*6+4] = yPlane - 0.05;
-      positions[j*6+5] = pb.y + pl.y + czOffset;
+      const wa = toWorld(pa.x, pa.y, -0.05);
+      const wb = toWorld(pb.x, pb.y, -0.05);
+      positions[j*6+0] = wa.x; positions[j*6+1] = wa.y; positions[j*6+2] = wa.z;
+      positions[j*6+3] = wb.x; positions[j*6+4] = wb.y; positions[j*6+5] = wb.z;
     }
     const indices = [];
     for (let j = 0; j < segs; j++) {
@@ -633,16 +693,15 @@ function buildFlats(p, ribs, panelDefs) {
     flatGroup.add(new THREE.Mesh(geo, flatFillMat));
 
     // Panel number sprite â centered on the flat panel
-    let cxs = 0, cys = 0;
-    for (const o of outline2D) { cxs += o.x; cys += o.y; }
-    cxs /= outline2D.length; cys /= outline2D.length;
+    const numPos = toWorld(pcx, pcy, 6);
     const numSprite = makeTextSprite(String(i + 1), { color: '#ffffff', bg: 'rgba(255,106,74,0.9)', worldSize: Math.min(panel.h * 0.35, 35) });
-    numSprite.position.set(cxs, yPlane + 6, cys + czOffset);
+    numSprite.position.copy(numPos);
     flatGroup.add(numSprite);
 
-    // Rib-pair label: e.g. "AâB"
+    // Rib-pair label: e.g. "AâB" â slightly outward from center along radial
+    const labelPos = toWorld(pcx, pcy + panel.h * 0.35, 5);
     const labelSprite = makeTextSprite(ribLetter(panel.def.a) + 'â' + ribLetter(panel.def.b), { color: '#ffd8c6', bg: 'rgba(20,22,28,0.8)', worldSize: Math.min(panel.h * 0.18, 18) });
-    labelSprite.position.set(cxs, yPlane + 5, cys + czOffset + panel.h * 0.35);
+    labelSprite.position.copy(labelPos);
     flatGroup.add(labelSprite);
   }
 
@@ -755,11 +814,20 @@ function buildLamp(p) {
   }
   if (lastLayout) lastLayout.ribLens = ribLens;
 
-  // Ribs: tube geometry along each rib curve
+  // Ribs: tube geometry along each rib curve, offset radially by rib_loc
+  // rib_loc = +1 â fully outside the surface; -1 â fully inside; 0 â centered on surface
   if (p.rib_thick > 0.05) {
+    const offsetAmt = (p.rib_loc !== undefined ? p.rib_loc : 1) * (p.rib_thick / 2);
     for (const ribPts of ribs) {
-      const curve = new THREE.CatmullRomCurve3(ribPts, false, 'catmullrom', 0.5);
-      const tubeGeo = new THREE.TubeGeometry(curve, ribPts.length * 2, p.rib_thick / 2, 8, false);
+      const offsetPts = ribPts.map(v => {
+        // radial direction in XZ plane (lamp axis is Y)
+        const rxz = Math.hypot(v.x, v.z);
+        if (rxz < 1e-6) return v.clone();
+        const nx = v.x / rxz, nz = v.z / rxz;
+        return new THREE.Vector3(v.x + nx * offsetAmt, v.y, v.z + nz * offsetAmt);
+      });
+      const curve = new THREE.CatmullRomCurve3(offsetPts, false, 'catmullrom', 0.5);
+      const tubeGeo = new THREE.TubeGeometry(curve, offsetPts.length * 2, p.rib_thick / 2, 8, false);
       lampGroup.add(new THREE.Mesh(tubeGeo, ribMat));
     }
   }
@@ -769,7 +837,7 @@ function buildLamp(p) {
 const ids = ['style', 'n_ribs', 'n_pts', 'height', 'max_r', 'twist_deg',
              'irregularity', 'asymmetry', 'bulge_pos', 'openness',
              'spacing_wave', 'rib_wave', 'wave_freq', 'golden_spiral',
-             'taper_top', 'taper_bot', 'rib_thick'];
+             'taper_top', 'taper_bot', 'rib_thick', 'rib_loc'];
 const intIds = new Set(['style', 'n_ribs', 'n_pts']);
 
 function readParams() {
@@ -937,4 +1005,3 @@ tick();
 </script>
 </body>
 </html>
-
