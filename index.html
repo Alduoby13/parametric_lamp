@@ -1,0 +1,940 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>Twisted Flame Lamp â Live</title>
+<style>
+  :root {
+    --bg: #0e0f12;
+    --panel: rgba(20, 22, 28, 0.85);
+    --ink: #e8e8ec;
+    --muted: #8a8d96;
+    --accent: #ff6b4a;
+    --line: rgba(255,255,255,0.08);
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; height: 100%; width: 100%;
+    background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+    overflow: hidden;
+  }
+  #stage { position: fixed; inset: 0; }
+  #ui {
+    position: fixed; top: 0; right: 0; bottom: 0;
+    width: 320px; padding: 18px 18px 24px 18px;
+    background: var(--panel);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-left: 1px solid var(--line);
+    overflow-y: auto;
+    z-index: 10;
+  }
+  #ui h1 {
+    font-size: 14px; font-weight: 600; letter-spacing: 0.02em;
+    margin: 0 0 4px 0;
+  }
+  #ui p.sub {
+    font-size: 11px; color: var(--muted);
+    margin: 0 0 16px 0;
+  }
+  .row { margin: 10px 0; }
+  .row label {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 11px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.05em;
+    margin-bottom: 4px;
+  }
+  .row label .val { color: var(--ink); font-variant-numeric: tabular-nums; text-transform: none; letter-spacing: 0; }
+  .row input[type=range] {
+    width: 100%; -webkit-appearance: none; appearance: none;
+    height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; outline: none;
+  }
+  .row input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--accent); cursor: pointer; border: 2px solid #1a1c22;
+  }
+  .row select {
+    width: 100%; background: rgba(255,255,255,0.06); color: var(--ink);
+    border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px;
+    font-size: 12px; outline: none;
+  }
+  .group {
+    margin-top: 18px; padding-top: 12px;
+    border-top: 1px solid var(--line);
+  }
+  .group-title {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--muted); margin-bottom: 6px;
+  }
+  #hint {
+    position: fixed; left: 16px; bottom: 12px; font-size: 11px;
+    color: var(--muted); z-index: 5; pointer-events: none;
+  }
+  @media (max-width: 640px) {
+    #ui { width: 100%; height: 50%; top: auto; bottom: 0; border-left: none; border-top: 1px solid var(--line); }
+    #stage { bottom: 50%; }
+  }
+</style>
+</head>
+<body>
+  <div id="stage"></div>
+  <div id="hint">drag to orbit Â· scroll to zoom Â· right-drag to pan</div>
+  <div id="ui">
+    <h1>Twisted Flame Lamp</h1>
+    <p class="sub">Live parametric model â same brain as the Grasshopper file.</p>
+
+    <div class="row">
+      <label>Style <span class="val" id="v_style">0</span></label>
+      <select id="style">
+        <option value="0">0 â Noguchi Flame</option>
+        <option value="1">1 â Smooth Teardrop</option>
+        <option value="2">2 â Inverted Drop</option>
+        <option value="3">3 â Open Top</option>
+        <option value="4">4 â Asymmetric Pear</option>
+        <option value="5">5 â Vase / Neck</option>
+        <option value="6">6 â Spiral Bloom</option>
+        <option value="7">7 â Mushroom</option>
+        <option value="8">8 â Hourglass</option>
+        <option value="9">9 â Faceted Body</option>
+      </select>
+    </div>
+
+    <div class="group">
+      <div class="group-title">Geometry</div>
+      <div class="row"><label>Ribs <span class="val" id="v_n_ribs">14</span></label><input type="range" id="n_ribs" min="4" max="30" value="14" step="1"></div>
+      <div class="row"><label>Resolution <span class="val" id="v_n_pts">60</span></label><input type="range" id="n_pts" min="20" max="100" value="60" step="1"></div>
+      <div class="row"><label>Height <span class="val" id="v_height">420</span></label><input type="range" id="height" min="100" max="1000" value="420" step="1"></div>
+      <div class="row"><label>Max Radius <span class="val" id="v_max_r">103</span></label><input type="range" id="max_r" min="50" max="300" value="103" step="1"></div>
+      <div class="row"><label>Twist Â° <span class="val" id="v_twist_deg">120</span></label><input type="range" id="twist_deg" min="0" max="360" value="120" step="1"></div>
+    </div>
+
+    <div class="group">
+      <div class="group-title">Organic shape</div>
+      <div class="row"><label>Irregularity <span class="val" id="v_irregularity">0.55</span></label><input type="range" id="irregularity" min="0" max="1" value="0.55" step="0.01"></div>
+      <div class="row"><label>Asymmetry <span class="val" id="v_asymmetry">0.15</span></label><input type="range" id="asymmetry" min="0" max="1" value="0.15" step="0.01"></div>
+      <div class="row"><label>Bulge position <span class="val" id="v_bulge_pos">0.35</span></label><input type="range" id="bulge_pos" min="0.1" max="0.9" value="0.35" step="0.01"></div>
+      <div class="row"><label>Openness <span class="val" id="v_openness">0</span></label><input type="range" id="openness" min="0" max="1" value="0" step="0.01"></div>
+    </div>
+
+    <div class="group">
+      <div class="group-title">Waves & spiral</div>
+      <div class="row"><label>Spacing wave <span class="val" id="v_spacing_wave">0.6</span></label><input type="range" id="spacing_wave" min="0" max="1" value="0.6" step="0.01"></div>
+      <div class="row"><label>Rib wave <span class="val" id="v_rib_wave">0.4</span></label><input type="range" id="rib_wave" min="0" max="1" value="0.4" step="0.01"></div>
+      <div class="row"><label>Wave freq <span class="val" id="v_wave_freq">2</span></label><input type="range" id="wave_freq" min="0.5" max="5" value="2" step="0.1"></div>
+      <div class="row"><label>Golden spiral <span class="val" id="v_golden_spiral">0.3</span></label><input type="range" id="golden_spiral" min="0" max="1" value="0.3" step="0.01"></div>
+    </div>
+
+    <div class="group">
+      <div class="group-title">Taper & ribs</div>
+      <div class="row"><label>Taper top <span class="val" id="v_taper_top">0.2</span></label><input type="range" id="taper_top" min="0" max="1" value="0.2" step="0.01"></div>
+      <div class="row"><label>Taper bottom <span class="val" id="v_taper_bot">0.15</span></label><input type="range" id="taper_bot" min="0" max="1" value="0.15" step="0.01"></div>
+      <div class="row"><label>Rib thickness <span class="val" id="v_rib_thick">2</span></label><input type="range" id="rib_thick" min="0" max="10" value="2" step="0.1"></div>
+    </div>
+
+    <div class="group">
+      <div class="group-title">Cutting patterns</div>
+      <div class="row" style="display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" id="show_flats" style="width:auto;accent-color:var(--accent);">
+        <label for="show_flats" style="margin:0;text-transform:none;letter-spacing:0;color:var(--ink);font-size:12px;">Show cutting layout & labels</label>
+      </div>
+      <button id="dl_dxf" style="margin-top:10px;width:100%;background:var(--accent);color:#1a1c22;border:none;border-radius:6px;padding:8px 10px;font-size:12px;font-weight:600;cursor:pointer;">Download DXF</button>
+      <div id="rib_lengths" style="margin-top:12px;font-size:11px;color:var(--muted);max-height:160px;overflow-y:auto;font-variant-numeric:tabular-nums;"></div>
+    </div>
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+// âââ Seedable PRNG (mulberry32) so irregularity stays deterministic âââ
+function mulberry32(seed) {
+  return function() {
+    let t = seed += 0x6D2B79F5;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function gauss(rng) {
+  // Box-Muller
+  let u = 0, v = 0;
+  while (u === 0) u = rng();
+  while (v === 0) v = rng();
+  return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+}
+
+// âââ Profile functions (1:1 port from lamp_script_v3.py) âââ
+function profile(t, sty, bp, op) {
+  let r;
+  if (sty === 0) {
+    const main  = Math.pow(Math.sin(t * Math.PI), 0.65);
+    const waist = 1.0 - 0.38 * Math.exp(-Math.pow(t - 0.38, 2) / 0.007);
+    const upper = 1.0 - 0.45 * Math.exp(-Math.pow(t - 0.82, 2) / 0.012);
+    const tail  = Math.pow(t, 0.4);
+    r = main * waist * upper * tail;
+  } else if (sty === 1) {
+    let s;
+    if (t < bp) s = 0.5 * (t / bp);
+    else        s = 0.5 + 0.5 * ((t - bp) / (1.0 - bp));
+    r = Math.pow(Math.sin(s * Math.PI), 1.3);
+    const denom = Math.pow(bp, 0.6) * Math.pow(1.0 - bp, 0.6) + 1e-9;
+    r *= Math.pow(t, 0.6) * Math.pow(1.0 - t, 0.6) / denom;
+    r = Math.max(r, 0);
+  } else if (sty === 2) {
+    let s;
+    if (t < bp) {
+      s = t / bp;
+      r = Math.sqrt(1.0 - Math.pow(1.0 - s, 2));
+    } else {
+      s = (t - bp) / (1.0 - bp);
+      r = 1.0 - Math.pow(s, 1.8);
+    }
+    r *= 1.0 + 0.12 * Math.sin(t * Math.PI * 2);
+    r = Math.max(r, 0);
+  } else if (sty === 3) {
+    const base = Math.pow(Math.sin(t * Math.PI), 0.75);
+    const top_floor = op * 0.35;
+    const bot_floor = 0.15;
+    r = base * (1.0 - top_floor - bot_floor) + bot_floor;
+    if (t > 0.85) r = r * (1.0 - top_floor) + top_floor;
+    r = Math.max(r, 0);
+  } else if (sty === 4) {
+    let s;
+    if (t < bp) {
+      s = t / bp;
+      r = Math.pow(s, 0.7);
+    } else {
+      s = (t - bp) / (1.0 - bp);
+      r = Math.pow(1.0 - s, 0.5);
+    }
+    r *= 1.0 + 0.08 * Math.sin(t * Math.PI * 3);
+    r = Math.max(r, 0);
+  } else if (sty === 5) {
+    const body = Math.pow(Math.sin(t * Math.PI * 0.8), 0.9);
+    const neck_pos = 0.75, neck_depth = 0.55;
+    const neck = 1.0 - neck_depth * Math.exp(-Math.pow(t - neck_pos, 2) / 0.008);
+    const rim = 1.0 + 0.3 * Math.max(0, (t - 0.88)) / 0.12;
+    const base_lift = Math.pow(Math.min(t / 0.08, 1.0), 0.5);
+    r = body * neck * rim * base_lift;
+    r = Math.max(r, 0);
+  } else if (sty === 6) {
+    const base = Math.pow(Math.sin(t * Math.PI), 0.8);
+    const growth = Math.exp(1.5 * (t - 0.5));
+    const spiral_mod = 0.3 * Math.sin(t * Math.PI * 3) * t;
+    r = base * (0.6 + 0.4 * (growth / Math.exp(0.75))) + spiral_mod;
+    r *= Math.min(t / 0.05, 1.0);
+    r = Math.max(r, 0);
+  } else if (sty === 7) {
+    if (t < 0.55) {
+      const stem_r = 0.15 + 0.08 * Math.sin(t / 0.55 * Math.PI * 0.5);
+      r = stem_r;
+    } else {
+      const s = (t - 0.55) / 0.45;
+      const cap = Math.pow(Math.sin(s * Math.PI), 0.5);
+      const blend = Math.min((t - 0.55) / 0.1, 1.0);
+      r = 0.23 * (1.0 - blend) + cap * blend;
+    }
+    r = Math.max(r, 0);
+  } else if (sty === 8) {
+    const mid = bp;
+    let s;
+    if (t < mid) {
+      s = t / mid;
+      r = 1.0 - 0.7 * Math.sin(s * Math.PI * 0.5);
+    } else {
+      s = (t - mid) / (1.0 - mid);
+      r = 0.3 + 0.7 * Math.sin(s * Math.PI * 0.5);
+    }
+    const pinch = Math.exp(-Math.pow(t - mid, 2) / 0.015);
+    r = r * (1.0 - 0.5 * pinch) + 0.2 * pinch;
+    const base_lift = Math.pow(Math.min(t / 0.05, 1.0), 0.5);
+    const top_lift  = Math.pow(Math.min((1.0 - t) / 0.05, 1.0), 0.5);
+    r *= base_lift * top_lift;
+    r = Math.max(r, 0);
+  } else if (sty === 9) {
+    const base = Math.pow(Math.sin(t * Math.PI), 0.6);
+    const bump1 = 0.15 * Math.sin(t * Math.PI * 4.0);
+    const bump2 = 0.08 * Math.sin(t * Math.PI * 7.0 + 1.2);
+    const bump3 = 0.05 * Math.sin(t * Math.PI * 11.0 + 2.4);
+    r = base * (1.0 + bump1 + bump2 + bump3);
+    r *= Math.pow(t, 0.3) * Math.pow(1.0 - t, 0.25);
+    r *= 3.2;
+    r = Math.max(r, 0);
+  } else {
+    r = Math.pow(Math.sin(t * Math.PI), 0.65);
+  }
+  return r;
+}
+
+// âââ Build rib points: returns array of arrays of THREE.Vector3 âââ
+const GOLDEN_ANGLE = Math.PI * (3.0 - Math.sqrt(5.0));
+
+function buildRibs(p) {
+  const rng = mulberry32(42);
+
+  const gap_weights = [];
+  for (let i = 0; i < p.n_ribs; i++) {
+    const w = 1.0 + gauss(rng) * p.irregularity * 0.7;
+    gap_weights.push(Math.max(w, 0.15));
+  }
+  const total_w = gap_weights.reduce((a, b) => a + b, 0);
+  const gap_angles = gap_weights.map(w => w / total_w * 2.0 * Math.PI);
+
+  const uniform_angles = [];
+  let cum = 0;
+  for (const g of gap_angles) { uniform_angles.push(cum); cum += g; }
+
+  const golden_angles = [];
+  for (let i = 0; i < p.n_ribs; i++) {
+    golden_angles.push((i * GOLDEN_ANGLE) % (2 * Math.PI));
+  }
+
+  const base_angles = uniform_angles.map(
+    (a, i) => a * (1 - p.golden_spiral) + golden_angles[i] * p.golden_spiral
+  );
+
+  const spacing_phases= Array.from({ length: p.n_ribs }, () => rng() * 2 * Math.PI);
+
+  // Field function: radius depends ONLY on (t, angle), never on which rib.
+  // â If two ribs cross at the same (t, angle), they share r and touch exactly.
+  function radiusField(t, angle) {
+    let r = profile(t, p.style, p.bulge_pos, p.openness) * p.max_r;
+    if (p.taper_bot > 0 && t < 0.15) {
+      r *= Math.pow(t / 0.15, 0.3 + p.taper_bot * 2.0);
+    }
+    if (p.taper_top > 0 && t > 0.85) {
+      r *= Math.pow((1 - t) / 0.15, 0.3 + p.taper_top * 2.0);
+    }
+    if (p.rib_wave > 0) {
+      r *= 1 + p.rib_wave * 0.25 * Math.sin(t * Math.PI * p.wave_freq * 2 + angle * 2.0);
+    }
+    if (p.irregularity > 0) {
+      // Angle-based "organic" wobble â same field for every rib
+      r *= 1 + p.irregularity * 0.12 * Math.sin(angle * 3.0 + t * Math.PI * 1.7);
+      r *= 1 + p.irregularity * 0.06 * Math.cos(angle * 5.0 - t * Math.PI * 2.3);
+    }
+    const asym_factor = 1 + p.asymmetry * 0.45 * Math.cos(angle - Math.PI / 2);
+    r *= asym_factor;
+    return Math.max(r, 0);
+  }
+
+  const ribs = [];
+  const ribAngles = [];
+  for (let i = 0; i < p.n_ribs; i++) {
+    const angle0 = base_angles[i];
+    const sp_phase = spacing_phases[i];
+    const pts = [];
+    const angs = [];
+    for (let j = 0; j <= p.n_pts; j++) {
+      const t = j / p.n_pts;
+      const z = t * p.height;
+      const twist_rad = (p.twist_deg * Math.PI / 180) * t;
+      let spacing_offset = 0;
+      if (p.spacing_wave > 0) {
+        spacing_offset = p.spacing_wave * 0.4 * Math.sin(t * Math.PI * p.wave_freq + sp_phase);
+      }
+      const angle = angle0 + twist_rad + spacing_offset;
+      const r = radiusField(t, angle);
+      const x = r * Math.cos(angle);
+      const y = r * Math.sin(angle);
+      pts.push(new THREE.Vector3(x, z, -y));
+      angs.push(angle);
+    }
+    ribs.push(pts);
+    ribAngles.push(angs);
+  }
+  return { ribs, ribAngles };
+}
+
+// âââ Three.js scene setup âââ
+const stage = document.getElementById('stage');
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth - 320, window.innerHeight);
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.setClearColor(0x0e0f12, 1);
+stage.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0x0e0f12, 1500, 4000);
+
+const camera = new THREE.PerspectiveCamera(35, (window.innerWidth - 320) / window.innerHeight, 1, 5000);
+camera.position.set(700, 500, 700);
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 220, 0);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.update();
+
+// Lighting
+scene.add(new THREE.AmbientLight(0xffffff, 0.35));
+const key = new THREE.DirectionalLight(0xffffff, 0.9);
+key.position.set(600, 800, 600);
+scene.add(key);
+const fill = new THREE.DirectionalLight(0xff8866, 0.4);
+fill.position.set(-600, 200, -400);
+scene.add(fill);
+const rim = new THREE.PointLight(0xffaa66, 1.2, 1500, 1.5);
+rim.position.set(0, 220, 0);
+scene.add(rim);
+
+// Ground
+const groundGeo = new THREE.CircleGeometry(1500, 64);
+const groundMat = new THREE.MeshStandardMaterial({ color: 0x14161c, roughness: 1, metalness: 0 });
+const ground = new THREE.Mesh(groundGeo, groundMat);
+ground.rotation.x = -Math.PI / 2;
+ground.position.y = -2;
+scene.add(ground);
+
+// Materials
+const panelMat = new THREE.MeshStandardMaterial({
+  color: 0xff5a3c,
+  emissive: 0xff3a1a,
+  emissiveIntensity: 0.55,
+  side: THREE.DoubleSide,
+  transparent: true,
+  opacity: 0.55,
+  roughness: 0.4,
+  metalness: 0.0,
+});
+const ribMat = new THREE.MeshStandardMaterial({
+  color: 0x2a1a14,
+  roughness: 0.6,
+  metalness: 0.05,
+});
+
+// Container group we'll rebuild on every change
+let lampGroup = new THREE.Group();
+scene.add(lampGroup);
+let flatGroup = new THREE.Group();
+scene.add(flatGroup);
+
+// Materials for flat patterns
+const flatLineMat = new THREE.LineBasicMaterial({ color: 0xff8866 });
+const flatFillMat = new THREE.MeshStandardMaterial({
+  color: 0x1a1c22, side: THREE.DoubleSide, roughness: 0.9, metalness: 0.0,
+});
+
+// âââ Hinge-unroll a quad strip between two ribs into 2D âââ
+function trilaterate2D(p1, p2, r1, r2, sign) {
+  const dx = p2.x - p1.x, dy = p2.y - p1.y;
+  const d = Math.hypot(dx, dy);
+  if (d < 1e-9) return new THREE.Vector2(p1.x + r1, p1.y);
+  const a = (r1*r1 - r2*r2 + d*d) / (2*d);
+  let h2 = r1*r1 - a*a;
+  if (h2 < 0) h2 = 0;
+  const h = Math.sqrt(h2);
+  const mx = p1.x + a*dx/d, my = p1.y + a*dy/d;
+  const px = -dy/d, py = dx/d;
+  return new THREE.Vector2(mx + sign*h*px, my + sign*h*py);
+}
+
+function ribLetter(i) {
+  // A, B, ..., Z, AA, AB, ...
+  let s = ''; let n = i;
+  while (true) {
+    s = String.fromCharCode(65 + (n % 26)) + s;
+    n = Math.floor(n / 26) - 1;
+    if (n < 0) break;
+  }
+  return s;
+}
+function polylineLength(pts) {
+  let L = 0;
+  for (let i = 1; i < pts.length; i++) L += pts[i].distanceTo(pts[i-1]);
+  return L;
+}
+function makeTextSprite(text, opts = {}) {
+  const color = opts.color || '#ffffff';
+  const bg = opts.bg || 'rgba(0,0,0,0.55)';
+  const fontSize = opts.fontSize || 64;
+  const cvs = document.createElement('canvas');
+  const ctx = cvs.getContext('2d');
+  ctx.font = `700 ${fontSize}px -apple-system, "SF Pro Text", sans-serif`;
+  const pad = 20;
+  const tw = ctx.measureText(text).width;
+  cvs.width = Math.ceil(tw + pad * 2);
+  cvs.height = Math.ceil(fontSize + pad * 2);
+  const c = cvs.getContext('2d');
+  c.font = `700 ${fontSize}px -apple-system, "SF Pro Text", sans-serif`;
+  c.fillStyle = bg;
+  const rr = 16;
+  c.beginPath();
+  c.moveTo(rr, 0);
+  c.lineTo(cvs.width - rr, 0);
+  c.quadraticCurveTo(cvs.width, 0, cvs.width, rr);
+  c.lineTo(cvs.width, cvs.height - rr);
+  c.quadraticCurveTo(cvs.width, cvs.height, cvs.width - rr, cvs.height);
+  c.lineTo(rr, cvs.height);
+  c.quadraticCurveTo(0, cvs.height, 0, cvs.height - rr);
+  c.lineTo(0, rr);
+  c.quadraticCurveTo(0, 0, rr, 0);
+  c.closePath();
+  c.fill();
+  c.fillStyle = color;
+  c.textBaseline = 'middle';
+  c.textAlign = 'center';
+  c.fillText(text, cvs.width / 2, cvs.height / 2);
+  const tex = new THREE.CanvasTexture(cvs);
+  tex.minFilter = THREE.LinearFilter;
+  tex.needsUpdate = true;
+  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false });
+  const sprite = new THREE.Sprite(mat);
+  sprite.renderOrder = 999;
+  const scale = opts.worldSize || 40;
+  sprite.scale.set(scale * (cvs.width / cvs.height), scale, 1);
+  return sprite;
+}
+
+function unrollStrip(a, b) {
+  // Returns flat[j*2] = a[j] in 2D, flat[j*2+1] = b[j] in 2D
+  const n = a.length;
+  const flat = new Array(n * 2);
+  const d0 = a[0].distanceTo(b[0]);
+  flat[0] = new THREE.Vector2(0, 0);
+  flat[1] = new THREE.Vector2(d0, 0);
+  for (let j = 1; j < n; j++) {
+    const aPrev = flat[(j-1)*2];
+    const bPrev = flat[(j-1)*2 + 1];
+    const dA_aPrev = a[j].distanceTo(a[j-1]);
+    const dA_bPrev = a[j].distanceTo(b[j-1]);
+    const aNew = trilaterate2D(aPrev, bPrev, dA_aPrev, dA_bPrev, +1);
+    flat[j*2] = aNew;
+    const dB_bPrev = b[j].distanceTo(b[j-1]);
+    const dB_aNew  = b[j].distanceTo(a[j]);
+    const bNew = trilaterate2D(bPrev, aNew, dB_bPrev, dB_aNew, -1);
+    flat[j*2 + 1] = bNew;
+  }
+  return flat;
+}
+
+function disposeGroup(g) {
+  g.traverse(obj => {
+    if (obj.geometry) obj.geometry.dispose();
+  });
+  while (g.children.length) g.remove(g.children[0]);
+}
+
+// Stores the last built layout so the DXF export can use it
+let lastLayout = null;
+
+function buildFlats(p, ribs, panelDefs) {
+  disposeGroup(flatGroup);
+  lastLayout = null;
+  const render = p.show_flats;
+
+  // Unroll each panelDef into a flat strip
+  const panels = [];
+  for (const def of panelDefs) {
+    const aPts = [], bPts = [];
+    for (let j = def.jStart; j <= def.jEnd; j++) {
+      aPts.push(ribs[def.a][j]);
+      bPts.push(ribs[def.b][j]);
+    }
+    const flat = unrollStrip(aPts, bPts);
+    const n = aPts.length;
+    const outline = [];
+    for (let j = 0; j < n; j++) outline.push(flat[j*2]);
+    for (let j = n - 1; j >= 0; j--) outline.push(flat[j*2 + 1]);
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    for (const pt of outline) {
+      if (pt.x < minX) minX = pt.x; if (pt.x > maxX) maxX = pt.x;
+      if (pt.y < minY) minY = pt.y; if (pt.y > maxY) maxY = pt.y;
+    }
+    panels.push({
+      def, outline, flat, n,
+      w: maxX - minX, h: maxY - minY, minX, minY,
+    });
+  }
+
+  // Continuous packing: butt panels together horizontally with no gaps.
+  // Wrap to a new row when the running width exceeds maxRowWidth.
+  const maxRowWidth = Math.max(p.max_r * 6, 600);
+  const rowGap = 20;
+  let xOff = 0, yOff = 0, rowMaxH = 0;
+  const placements = [];
+  for (const panel of panels) {
+    if (xOff > 0 && xOff + panel.w > maxRowWidth) {
+      xOff = 0;
+      yOff -= rowMaxH + rowGap;
+      rowMaxH = 0;
+    }
+    placements.push({ x: xOff - panel.minX, y: yOff - panel.minY });
+    xOff += panel.w; // no spacing â continuous
+    if (panel.h > rowMaxH) rowMaxH = panel.h;
+  }
+
+  // Global bbox to center the layout behind the lamp
+  let gMinX = Infinity, gMaxX = -Infinity, gMinY = Infinity, gMaxY = -Infinity;
+  for (let i = 0; i < panels.length; i++) {
+    const pl = placements[i];
+    for (const pt of panels[i].outline) {
+      const x = pt.x + pl.x;
+      const y = pt.y + pl.y;
+      if (x < gMinX) gMinX = x; if (x > gMaxX) gMaxX = x;
+      if (y < gMinY) gMinY = y; if (y > gMaxY) gMaxY = y;
+    }
+  }
+  const cx = (gMinX + gMaxX) / 2;
+  const zStart = -(p.max_r * 1.8);
+  const czOffset = zStart - gMaxY;
+  const yPlane = 0.6;
+
+  // Remember the 2D layout (in "layout space", y-flipped for DXF export)
+  const dxfPanels = [];
+
+  for (let i = 0; i < panels.length; i++) {
+    const pl = placements[i];
+    const panel = panels[i];
+
+    // Layout-space outline (always computed, for DXF)
+    const outline2D = [];
+    for (const pt of panel.outline) {
+      const lx = pt.x + pl.x - cx;
+      const ly = pt.y + pl.y;
+      outline2D.push({ x: lx, y: ly });
+    }
+    dxfPanels.push({ outline: outline2D, number: i + 1, ribA: ribLetter(panel.def.a), ribB: ribLetter(panel.def.b) });
+
+    if (!render) continue;
+
+    // Outline line
+    const linePts = outline2D.map(o => new THREE.Vector3(o.x, yPlane, o.y + czOffset));
+    linePts.push(linePts[0].clone());
+    const lineGeo = new THREE.BufferGeometry().setFromPoints(linePts);
+    flatGroup.add(new THREE.Line(lineGeo, flatLineMat));
+
+    // Filled flat panel mesh
+    const segs = panel.n - 1;
+    const positions = new Float32Array((segs + 1) * 2 * 3);
+    for (let j = 0; j <= segs; j++) {
+      const pa = panel.flat[j * 2];
+      const pb = panel.flat[j * 2 + 1];
+      positions[j*6+0] = pa.x + pl.x - cx;
+      positions[j*6+1] = yPlane - 0.05;
+      positions[j*6+2] = pa.y + pl.y + czOffset;
+      positions[j*6+3] = pb.x + pl.x - cx;
+      positions[j*6+4] = yPlane - 0.05;
+      positions[j*6+5] = pb.y + pl.y + czOffset;
+    }
+    const indices = [];
+    for (let j = 0; j < segs; j++) {
+      const i0 = j*2, i1 = j*2+1, i2 = j*2+2, i3 = j*2+3;
+      indices.push(i0, i2, i1);
+      indices.push(i1, i2, i3);
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geo.setIndex(indices);
+    geo.computeVertexNormals();
+    flatGroup.add(new THREE.Mesh(geo, flatFillMat));
+
+    // Panel number sprite â centered on the flat panel
+    let cxs = 0, cys = 0;
+    for (const o of outline2D) { cxs += o.x; cys += o.y; }
+    cxs /= outline2D.length; cys /= outline2D.length;
+    const numSprite = makeTextSprite(String(i + 1), { color: '#ffffff', bg: 'rgba(255,106,74,0.9)', worldSize: Math.min(panel.h * 0.35, 35) });
+    numSprite.position.set(cxs, yPlane + 6, cys + czOffset);
+    flatGroup.add(numSprite);
+
+    // Rib-pair label: e.g. "AâB"
+    const labelSprite = makeTextSprite(ribLetter(panel.def.a) + 'â' + ribLetter(panel.def.b), { color: '#ffd8c6', bg: 'rgba(20,22,28,0.8)', worldSize: Math.min(panel.h * 0.18, 18) });
+    labelSprite.position.set(cxs, yPlane + 5, cys + czOffset + panel.h * 0.35);
+    flatGroup.add(labelSprite);
+  }
+
+  if (render) {
+    // Rib letter labels at the top of each rib
+    for (let i = 0; i < ribs.length; i++) {
+      const topPt = ribs[i][ribs[i].length - 1];
+      const ribSprite = makeTextSprite(ribLetter(i), { color: '#1a1c22', bg: 'rgba(255,216,198,0.95)', worldSize: 28 });
+      ribSprite.position.set(topPt.x, topPt.y + 18, topPt.z);
+      flatGroup.add(ribSprite);
+    }
+  }
+
+  lastLayout = { panels: dxfPanels };
+}
+
+function buildLamp(p) {
+  disposeGroup(lampGroup);
+
+  const { ribs, ribAngles } = buildRibs(p);
+  const n = ribs.length;
+  const levels = ribs[0].length;
+
+  // Normalize angle to [0, 2Ï)
+  const norm = a => {
+    let r = a % (2 * Math.PI);
+    if (r < 0) r += 2 * Math.PI;
+    return r;
+  };
+
+  // For each band [j, j+1], sort ribs by their angle at level j to find
+  // who the actual angular neighbors are at this height. Each consecutive
+  // pair in the sorted order gets a quad. When two ribs cross between
+  // bands, the sort order swaps and the panel switches to the new neighbor.
+  const bandPairs = []; // bandPairs[j] = [[a,b], [b,c], ...] in CCW sorted order
+  for (let j = 0; j < levels - 1; j++) {
+    const order = [...Array(n).keys()].sort(
+      (x, y) => norm(ribAngles[x][j]) - norm(ribAngles[y][j])
+    );
+    const pairs = [];
+    for (let k = 0; k < n; k++) {
+      pairs.push([order[k], order[(k + 1) % n]]);
+    }
+    bandPairs.push(pairs);
+  }
+
+  // Emit one merged BufferGeometry for all panel quads (faster than n meshes)
+  const positions = [];
+  const indices = [];
+  let vIdx = 0;
+  for (let j = 0; j < levels - 1; j++) {
+    for (const [a, b] of bandPairs[j]) {
+      const pa0 = ribs[a][j],   pb0 = ribs[b][j];
+      const pa1 = ribs[a][j+1], pb1 = ribs[b][j+1];
+      const base = vIdx;
+      positions.push(pa0.x, pa0.y, pa0.z);
+      positions.push(pb0.x, pb0.y, pb0.z);
+      positions.push(pa1.x, pa1.y, pa1.z);
+      positions.push(pb1.x, pb1.y, pb1.z);
+      indices.push(base, base + 1, base + 2);
+      indices.push(base + 2, base + 1, base + 3);
+      vIdx += 4;
+    }
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
+  geo.setIndex(indices);
+  geo.computeVertexNormals();
+  lampGroup.add(new THREE.Mesh(geo, panelMat));
+
+  // Group consecutive bands sharing the same (a,b) ordered pair into one
+  // continuous flat panel. When ribs swap, the old panel ends and a new
+  // one starts on the other side of the crossing.
+  const consumed = bandPairs.map(pairs => pairs.map(() => false));
+  const panelDefs = [];
+  for (let j0 = 0; j0 < bandPairs.length; j0++) {
+    for (let k0 = 0; k0 < bandPairs[j0].length; k0++) {
+      if (consumed[j0][k0]) continue;
+      const [a, b] = bandPairs[j0][k0];
+      consumed[j0][k0] = true;
+      let jEnd = j0;
+      let j = j0 + 1;
+      while (j < bandPairs.length) {
+        let found = -1;
+        for (let k = 0; k < bandPairs[j].length; k++) {
+          if (!consumed[j][k]) {
+            const pr = bandPairs[j][k];
+            if (pr[0] === a && pr[1] === b) { found = k; break; }
+          }
+        }
+        if (found === -1) break;
+        consumed[j][found] = true;
+        jEnd = j;
+        j++;
+      }
+      panelDefs.push({ a, b, jStart: j0, jEnd: jEnd + 1 });
+    }
+  }
+
+  buildFlats(p, ribs, panelDefs);
+
+  // Rib lengths â shown in sidebar and included in DXF
+  const ribLens = ribs.map(polylineLength);
+  const lenEl = document.getElementById('rib_lengths');
+  if (lenEl) {
+    const rows = ribLens.map((L, i) =>
+      `<div style="display:flex;justify-content:space-between;padding:2px 0;"><span style="color:var(--ink);font-weight:600;">${ribLetter(i)}</span><span>${L.toFixed(1)} mm</span></div>`
+    ).join('');
+    lenEl.innerHTML = rows;
+  }
+  if (lastLayout) lastLayout.ribLens = ribLens;
+
+  // Ribs: tube geometry along each rib curve
+  if (p.rib_thick > 0.05) {
+    for (const ribPts of ribs) {
+      const curve = new THREE.CatmullRomCurve3(ribPts, false, 'catmullrom', 0.5);
+      const tubeGeo = new THREE.TubeGeometry(curve, ribPts.length * 2, p.rib_thick / 2, 8, false);
+      lampGroup.add(new THREE.Mesh(tubeGeo, ribMat));
+    }
+  }
+}
+
+// âââ Wire up sliders âââ
+const ids = ['style', 'n_ribs', 'n_pts', 'height', 'max_r', 'twist_deg',
+             'irregularity', 'asymmetry', 'bulge_pos', 'openness',
+             'spacing_wave', 'rib_wave', 'wave_freq', 'golden_spiral',
+             'taper_top', 'taper_bot', 'rib_thick'];
+const intIds = new Set(['style', 'n_ribs', 'n_pts']);
+
+function readParams() {
+  const p = {};
+  for (const id of ids) {
+    const el = document.getElementById(id);
+    const v = parseFloat(el.value);
+    p[id] = intIds.has(id) ? Math.round(v) : v;
+  }
+  p.show_flats = document.getElementById('show_flats').checked;
+  return p;
+}
+
+function updateLabels(p) {
+  for (const id of ids) {
+    const lbl = document.getElementById('v_' + id);
+    if (!lbl) continue;
+    const v = p[id];
+    lbl.textContent = (Number.isInteger(v) || intIds.has(id)) ? v : v.toFixed(2);
+  }
+}
+
+let pending = false;
+function rebuild() {
+  if (pending) return;
+  pending = true;
+  requestAnimationFrame(() => {
+    pending = false;
+    const p = readParams();
+    updateLabels(p);
+    buildLamp(p);
+  });
+}
+
+for (const id of ids) {
+  document.getElementById(id).addEventListener('input', rebuild);
+}
+document.getElementById('show_flats').addEventListener('change', rebuild);
+
+// âââ DXF export âââ
+function buildDXF(layout) {
+  // Minimal AutoCAD R12 DXF with LWPOLYLINE + TEXT entities
+  let out = '';
+  const w = (code, val) => { out += code + '\n' + val + '\n'; };
+  w(0, 'SECTION'); w(2, 'HEADER');
+  w(9, '$INSUNITS'); w(70, 4); // millimeters
+  w(0, 'ENDSEC');
+  w(0, 'SECTION'); w(2, 'TABLES');
+  w(0, 'TABLE'); w(2, 'LAYER'); w(70, 3);
+  const mkLayer = (name, color) => {
+    w(0, 'LAYER'); w(2, name); w(70, 0); w(62, color); w(6, 'CONTINUOUS');
+  };
+  mkLayer('PANELS', 7);
+  mkLayer('LABELS', 1);
+  mkLayer('RIBS', 3);
+  w(0, 'ENDTAB'); w(0, 'ENDSEC');
+  w(0, 'SECTION'); w(2, 'ENTITIES');
+
+  // Flip Y so DXF is right-side-up (layout had y going down for new rows)
+  const flipY = (y) => -y;
+
+  for (const panel of layout.panels) {
+    // Closed LWPOLYLINE
+    w(0, 'LWPOLYLINE');
+    w(8, 'PANELS');
+    w(90, panel.outline.length);
+    w(70, 1); // closed
+    for (const pt of panel.outline) {
+      w(10, pt.x.toFixed(4));
+      w(20, flipY(pt.y).toFixed(4));
+    }
+    // Panel number at centroid
+    let cx = 0, cy = 0;
+    for (const pt of panel.outline) { cx += pt.x; cy += pt.y; }
+    cx /= panel.outline.length; cy /= panel.outline.length;
+    w(0, 'TEXT');
+    w(8, 'LABELS');
+    w(10, cx.toFixed(4));
+    w(20, flipY(cy).toFixed(4));
+    w(40, 12); // text height mm
+    w(1, '#' + panel.number);
+    w(72, 1); w(73, 2);
+    w(11, cx.toFixed(4));
+    w(21, flipY(cy).toFixed(4));
+    // Rib-pair subtitle below
+    w(0, 'TEXT');
+    w(8, 'LABELS');
+    w(10, cx.toFixed(4));
+    w(20, (flipY(cy) - 16).toFixed(4));
+    w(40, 6);
+    w(1, panel.ribA + '-' + panel.ribB);
+    w(72, 1); w(73, 2);
+    w(11, cx.toFixed(4));
+    w(21, (flipY(cy) - 16).toFixed(4));
+  }
+
+  // Rib length legend â placed below the layout
+  if (layout.ribLens) {
+    // find min y of layout so we can place legend below it
+    let minY = Infinity;
+    for (const panel of layout.panels) {
+      for (const pt of panel.outline) {
+        const y = flipY(pt.y);
+        if (y < minY) minY = y;
+      }
+    }
+    const legendY0 = minY - 60;
+    w(0, 'TEXT'); w(8, 'LABELS');
+    w(10, 0); w(20, legendY0.toFixed(4));
+    w(40, 10); w(1, 'RIB LENGTHS (mm):');
+    w(11, 0); w(21, legendY0.toFixed(4));
+    for (let i = 0; i < layout.ribLens.length; i++) {
+      const yy = legendY0 - 20 - i * 14;
+      w(0, 'TEXT'); w(8, 'LABELS');
+      w(10, 0); w(20, yy.toFixed(4));
+      w(40, 8);
+      w(1, ribLetter(i) + ' = ' + layout.ribLens[i].toFixed(1));
+      w(11, 0); w(21, yy.toFixed(4));
+    }
+  }
+
+  w(0, 'ENDSEC');
+  w(0, 'EOF');
+  return out;
+}
+
+document.getElementById('dl_dxf').addEventListener('click', () => {
+  const doSave = () => {
+    if (!lastLayout) return;
+    const dxf = buildDXF(lastLayout);
+    const blob = new Blob([dxf], { type: 'application/dxf' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'lamp_cutting_pattern.dxf';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+  if (lastLayout) { doSave(); }
+  else { rebuild(); requestAnimationFrame(() => requestAnimationFrame(doSave)); }
+});
+
+// Window resize
+function onResize() {
+  const isMobile = window.innerWidth <= 640;
+  const w = isMobile ? window.innerWidth : window.innerWidth - 320;
+  const h = isMobile ? Math.floor(window.innerHeight * 0.5) : window.innerHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', onResize);
+
+// First build + animate
+rebuild();
+function tick() {
+  controls.update();
+  // gentle auto-rotation when idle? (off by default)
+  renderer.render(scene, camera);
+  requestAnimationFrame(tick);
+}
+tick();
+</script>
+</body>
+</html>
+
