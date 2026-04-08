@@ -142,7 +142,7 @@
         <label for="show_flats" style="margin:0;text-transform:none;letter-spacing:0;color:var(--ink);font-size:12px;">Show cutting layout & labels</label>
       </div>
       <button id="dl_dxf" style="margin-top:10px;width:100%;background:var(--accent);color:#1a1c22;border:none;border-radius:6px;padding:8px 10px;font-size:12px;font-weight:600;cursor:pointer;">Download DXF</button>
-      <button id="ai_render" title="Generate a photorealistic render using fal.ai FLUX Â· ~$0.005/image" style="margin-top:8px;width:100%;background:linear-gradient(135deg,#a855f7,#6366f1);color:#fff;border:none;border-radius:6px;padding:8px 10px;font-size:12px;font-weight:600;cursor:pointer;letter-spacing:.02em;">â¨ AI Render</button>
+      <button id="ai_render" title="Generate a photorealistic render using Gemini AI" style="margin-top:8px;width:100%;background:linear-gradient(135deg,#4285f4,#34a853);color:#fff;border:none;border-radius:6px;padding:8px 10px;font-size:12px;font-weight:600;cursor:pointer;letter-spacing:.02em;">â¨ AI Render</button>
       <div id="rib_lengths" style="margin-top:12px;font-size:11px;color:var(--muted);max-height:160px;overflow-y:auto;font-variant-numeric:tabular-nums;"></div>
     </div>
   </div>
@@ -609,9 +609,14 @@ function buildFlats(p, ribs, panelDefs) {
       if (r > maxLampR) maxLampR = r;
     }
   }
-  let maxPanelHalfH = 0;
-  for (const pn of panels) maxPanelHalfH = Math.max(maxPanelHalfH, pn.h / 2);
-  const floorR = maxLampR + maxPanelHalfH + 60;
+  let maxPanelHalfH = 0, maxPanelW = 0;
+  for (const pn of panels) {
+    maxPanelHalfH = Math.max(maxPanelHalfH, pn.h / 2);
+    maxPanelW = Math.max(maxPanelW, pn.w);
+  }
+  // Ensure panels don't overlap angularly: arc between centers = floorR*(2Ï/N) > panelWidth+gap
+  const floorRNoOverlap = (maxPanelW + 30) * panels.length / (2 * Math.PI);
+  const floorR = Math.max(maxLampR + maxPanelHalfH + 60, floorRNoOverlap);
 
   // Remember the 2D layout (in "layout space", for DXF export)
   const dxfPanels = [];
@@ -649,7 +654,7 @@ function buildFlats(p, ribs, panelDefs) {
     // Panel-Y (height, along-rib) â radial direction outward in XZ
     // dy â height above floor (Y axis)
     const toWorld = (px, py, dy) => {
-      const lx = px - pcx;  // acros+rib â tangential
+      const lx = px - pcx;  // across-rib â tangential
       const ly = py - pcy;  // along-rib â radial outward
       return new THREE.Vector3(
         center.x + lx * tx + ly * rx,
@@ -1042,16 +1047,17 @@ function tick() {
 }
 tick();
 
-// âââ AI Render âââ
+// âââ AI Render (Gemini) âââ
 (function() {
-  const KEY_LS = 'lamp_fal_key';
+  const KEY_LS = 'lamp_gemini_key';
+  const DEFAULT_KEY = 'AIzaSyCar2N43mERwHQg2yoCZL1CC8wXOPmIA6w';
   let apiKey = '';
-  try { apiKey = localStorage.getItem(KEY_LS) || ''; } catch(e) {}
+  try { apiKey = localStorage.getItem(KEY_LS) || DEFAULT_KEY; } catch(e) { apiKey = DEFAULT_KEY; }
 
   document.getElementById('ai_render').addEventListener('click', async () => {
     let key = apiKey;
     if (!key) {
-      key = prompt('Enter your fal.ai API key\n(Get one free at fal.ai â FLUX img2img, ~$0.005/render):');
+      key = prompt('Enter your Gemini API key:');
       if (!key) return;
       apiKey = key;
       try { localStorage.setItem(KEY_LS, key); } catch(e) {}
@@ -1068,63 +1074,48 @@ tick();
     status.textContent = 'Capturing sceneâ¦';
 
     // Snapshot the Three.js canvas
-    try {
-      renderer.render(scene, camera);
-    } catch(e) {}
+    try { renderer.render(scene, camera); } catch(e) {}
     const srcCanvas = renderer.domElement;
     snapEl.width  = srcCanvas.width;
     snapEl.height = srcCanvas.height;
     snapEl.getContext('2d').drawImage(srcCanvas, 0, 0);
 
     try {
-      status.textContent = 'Uploading snapshot to fal.aiâ¦';
-      const blob = await new Promise((res, rej) => {
-        srcCanvas.toBlob(b => b ? res(b) : rej(new Error('toBlob failed')), 'image/png');
-      });
+      status.textContent = 'Preparing image for Geminiâ¦';
+      // Get base64 PNG from canvas (strip data:image/png;base64, prefix)
+      const dataUrl = srcCanvas.toDataURL('image/png');
+      const b64 = dataUrl.split(',')[1];
 
-      // Upload image to fal.ai storage â returns a CDN URL
-      const fd = new FormData();
-      fd.append('file', blob, 'lamp.png');
-      const upRes = await fetch('https://fal.run/storage/upload', {
-        method: 'POST',
-        headers: { 'Authorization': `Key ${key}` },
-        body: fd
-      });
-
-     if (!upRes.ok) {
-        const t = await upRes.text();
-        throw new Error(`Upload ${upRes.status}: ${t.slice(0,120)}`);
-      }
-      const { url: imageUrl } = await upRes.json();
-
-      status.textContent = 'Running FLUX img2img (may take ~10 s)â¦';
-      const genRes = await fetch('https://fal.run/fal-ai/flux/dev/image-to-image', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Key ${key}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          image_url: imageUrl,
-          prompt: 'Photorealistic professional product photograph of a hanging sculptural pendant lamp. Translucent washi paper or natural mulberry fiber panels glowing warmly from within with a soft amber and golden backlit glow. Thin bent wood veneer or rattan curved ribs tracing organic flowing curves across the surface. Suspended by a thin brushed-metal cable from above. Studio photography against a smooth neutral grey gradient background. Soft diffused studio lighting, subtle shadow beneath. Ultra-sharp focus, 4k product render quality.',
-          negative_prompt: 'blurry, cartoon, painting, flat, 2d, sketch, distorted, ugly, low quality',
-          strength: 0.68,
-          num_inference_steps: 28,
-          guidance_scale: 3.5,
-          image_size: 'square_hd',
-          seed: Math.floor(Math.random() * 1e9)
-        })
-      });
+      status.textContent = 'Generating photorealistic render with Geminiâ¦';
+      const genRes = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key=${key}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [
+                { text: 'You are a product visualisation expert. Take this 3D preview of a sculptural pendant lamp and generate a stunning photorealistic product photograph. The lamp has translucent natural-fiber panels (warm amber glow from within) on thin curved wooden ribs. Show it hanging in a cozy modern interior with soft warm studio lighting, neutral gradient background, subtle shadow below. Ultra-sharp, 4K product render quality. Keep the exact same lamp shape and proportions.' },
+                { inline_data: { mime_type: 'image/png', data: b64 } }
+              ]
+            }],
+            generationConfig: { responseModalities: ['IMAGE', 'TEXT'] }
+          })
+        }
+      );
       if (!genRes.ok) {
         const t = await genRes.text();
-        throw new Error(`Generate ${genRes.status}: ${t.slice(0,200)}`);
+        throw new Error(`Gemini ${genRes.status}: ${t.slice(0, 200)}`);
       }
       const result = await genRes.json();
-      const outUrl = result.images?.[0]?.url;
-      if (!outUrl) throw new Error('No image in response: ' + JSON.stringify(result).slice(0,200));
+      // Find the image part in the response
+      const parts = result.candidates?.[0]?.content?.parts || [];
+      const imgPart = parts.find(p => p.inline_data?.mime_type?.startsWith('image/'));
+      if (!imgPart) throw new Error('No image in Gemini response: ' + JSON.stringify(result).slice(0, 300));
 
+      const outDataUrl = `data:${imgPart.inline_data.mime_type};base64,${imgPart.inline_data.data}`;
       imgEl.onload = () => { imgEl.style.display = 'block'; };
-      imgEl.src = outUrl;
+      imgEl.src = outDataUrl;
       status.textContent = 'â Done â right-click image to save';
     } catch (e) {
       status.textContent = 'â ' + e.message;
@@ -1158,7 +1149,7 @@ tick();
       </div>
     </div>
     <div id="ai_status" style="color:#bbb;font-size:12px;text-align:center;min-height:18px;font-style:italic;"></div>
-    <div style="font-size:10px;color:#444;text-align:center;line-height:1.4;">Powered by <b style="color:#666;">fal.ai</b> Â· FLUX.1-dev img2img Â· ~$0.005/render<br>API key stored locally in your browser</div>
+    <div style="font-size:10px;color:#444;text-align:center;line-height:1.4;">Powered by <b style="color:#666;">Google Gemini</b> Â· gemini-2.0-flash image generation<br>API key stored locally in your browser</div>
   </div>
 </div>
 
