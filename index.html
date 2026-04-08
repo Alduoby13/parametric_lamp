@@ -597,7 +597,10 @@ function buildFlats(p, ribs, panelDefs) {
     return aa + diff / 2;
   }
 
-  // Floor radius: just outside the lamp's max footprint
+  // Floor radius: place panel centers just outside the lamp's XZ footprint.
+  // Each panel extends panel.h/2 radially inward/outward from its center,
+  // so the center must clear the lamp by at least that amount.
+  // We do NOT try to avoid angular overlap â that would push panels too far out.
   let maxLampR = 0;
   for (let i = 0; i < ribs.length; i++) {
     for (let j = 0; j < ribs[i].length; j++) {
@@ -606,20 +609,9 @@ function buildFlats(p, ribs, panelDefs) {
       if (r > maxLampR) maxLampR = r;
     }
   }
-  // Find largest panel half-width to leave breathing room
-  let maxHalfW = 0, maxFullW = 0;
-  for (const pn of panels) {
-    maxHalfW = Math.max(maxHalfW, pn.w / 2);
-    maxFullW = Math.max(maxFullW, pn.w);
-  }
-  // Push floor radius out far enough that adjacent panels don't overlap
-  // angularly. Each panel occupies an arc â floorR * (2Ï / N); we need that
-  // arc to be â¥ panel width plus a small margin.
-  const N = Math.max(panels.length, 1);
-  const angularSlice = (2 * Math.PI) / N;
-  const floorRBase = maxLampR + maxHalfW + 30;
-  const floorRNoOverlap = (maxFullW + 25) / angularSlice;
-  const floorR = Math.max(floorRBase, floorRNoOverlap);
+  let maxPanelHalfH = 0;
+  for (const pn of panels) maxPanelHalfH = Math.max(maxPanelHalfH, pn.h / 2);
+  const floorR = maxLampR + maxPanelHalfH + 60;
 
   // Remember the 2D layout (in "layout space", for DXF export)
   const dxfPanels = [];
@@ -657,7 +649,7 @@ function buildFlats(p, ribs, panelDefs) {
     // Panel-Y (height, along-rib) â radial direction outward in XZ
     // dy â height above floor (Y axis)
     const toWorld = (px, py, dy) => {
-      const lx = px - pcx;  // across-rib â tangential
+      const lx = px - pcx;  // acros+rib â tangential
       const ly = py - pcy;  // along-rib â radial outward
       return new THREE.Vector3(
         center.x + lx * tx + ly * rx,
@@ -1098,7 +1090,8 @@ tick();
         headers: { 'Authorization': `Key ${key}` },
         body: fd
       });
-      if (!upRes.ok) {
+
+     if (!upRes.ok) {
         const t = await upRes.text();
         throw new Error(`Upload ${upRes.status}: ${t.slice(0,120)}`);
       }
