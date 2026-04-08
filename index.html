@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-<title>Twisted Flame Lamp â Live</title>
+<title>Twisted Flame Lamp — Live</title>
 <style>
   :root {
     --bg: #0e0f12;
@@ -81,24 +81,24 @@
 </head>
 <body>
   <div id="stage"></div>
-  <div id="hint">drag to orbit Â· scroll to zoom Â· right-drag to pan</div>
+  <div id="hint">drag to orbit · scroll to zoom · right-drag to pan</div>
   <div id="ui">
     <h1>Twisted Flame Lamp</h1>
-    <p class="sub">Live parametric model â same brain as the Grasshopper file.</p>
+    <p class="sub">Live parametric model — same brain as the Grasshopper file.</p>
 
     <div class="row">
       <label>Style <span class="val" id="v_style">1</span></label>
       <select id="style">
-        <option value="0">0 â Noguchi Flame</option>
-        <option value="1" selected>1 â Smooth Teardrop</option>
-        <option value="2">2 â Inverted Drop</option>
-        <option value="3">3 â Open Top</option>
-        <option value="4">4 â Asymmetric Pear</option>
-        <option value="5">5 â Vase / Neck</option>
-        <option value="6">6 â Spiral Bloom</option>
-        <option value="7">7 â Mushroom</option>
-        <option value="8">8 â Hourglass</option>
-        <option value="9">9 â Faceted Body</option>
+        <option value="0">0 — Noguchi Flame</option>
+        <option value="1" selected>1 — Smooth Teardrop</option>
+        <option value="2">2 — Inverted Drop</option>
+        <option value="3">3 — Open Top</option>
+        <option value="4">4 — Asymmetric Pear</option>
+        <option value="5">5 — Vase / Neck</option>
+        <option value="6">6 — Spiral Bloom</option>
+        <option value="7">7 — Mushroom</option>
+        <option value="8">8 — Hourglass</option>
+        <option value="9">9 — Faceted Body</option>
       </select>
     </div>
 
@@ -108,7 +108,7 @@
       <div class="row"><label>Resolution <span class="val" id="v_n_pts">100</span></label><input type="range" id="n_pts" min="20" max="100" value="100" step="1"></div>
       <div class="row"><label>Height <span class="val" id="v_height">430</span></label><input type="range" id="height" min="100" max="1000" value="430" step="1"></div>
       <div class="row"><label>Max Radius <span class="val" id="v_max_r">118</span></label><input type="range" id="max_r" min="50" max="300" value="118" step="1"></div>
-      <div class="row"><label>Twist Â° <span class="val" id="v_twist_deg">120</span></label><input type="range" id="twist_deg" min="0" max="360" value="120" step="1"></div>
+      <div class="row"><label>Twist ° <span class="val" id="v_twist_deg">120</span></label><input type="range" id="twist_deg" min="0" max="360" value="120" step="1"></div>
     </div>
 
     <div class="group">
@@ -142,7 +142,7 @@
         <label for="show_flats" style="margin:0;text-transform:none;letter-spacing:0;color:var(--ink);font-size:12px;">Show cutting layout & labels</label>
       </div>
       <button id="dl_dxf" style="margin-top:10px;width:100%;background:var(--accent);color:#1a1c22;border:none;border-radius:6px;padding:8px 10px;font-size:12px;font-weight:600;cursor:pointer;">Download DXF</button>
-      <button id="ai_render" title="Generate a photorealistic render using Gemini AI" style="margin-top:8px;width:100%;background:linear-gradient(135deg,#4285f4,#34a853);color:#fff;border:none;border-radius:6px;padding:8px 10px;font-size:12px;font-weight:600;cursor:pointer;letter-spacing:.02em;">â¨ AI Render</button>
+      <button id="ai_render" title="Generate a photorealistic render using Gemini AI" style="margin-top:8px;width:100%;background:linear-gradient(135deg,#4285f4,#34a853);color:#fff;border:none;border-radius:6px;padding:8px 10px;font-size:12px;font-weight:600;cursor:pointer;letter-spacing:.02em;">✨ AI Render</button>
       <div id="rib_lengths" style="margin-top:12px;font-size:11px;color:var(--muted);max-height:160px;overflow-y:auto;font-variant-numeric:tabular-nums;"></div>
     </div>
   </div>
@@ -150,7 +150,7 @@
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script>
-// âââ Seedable PRNG (mulberry32) so irregularity stays deterministic âââ
+// ─── Seedable PRNG (mulberry32) so irregularity stays deterministic ───
 function mulberry32(seed) {
   return function() {
     let t = seed += 0x6D2B79F5;
@@ -167,7 +167,7 @@ function gauss(rng) {
   return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
 }
 
-// âââ Profile functions (1:1 port from lamp_script_v3.py) âââ
+// ─── Profile functions (1:1 port from lamp_script_v3.py) ───
 function profile(t, sty, bp, op) {
   let r;
   if (sty === 0) {
@@ -270,7 +270,7 @@ function profile(t, sty, bp, op) {
   return r;
 }
 
-// âââ Build rib points: returns array of arrays of THREE.Vector3 âââ
+// ─── Build rib points: returns array of arrays of THREE.Vector3 ───
 const GOLDEN_ANGLE = Math.PI * (3.0 - Math.sqrt(5.0));
 
 function buildRibs(p) {
@@ -300,7 +300,7 @@ function buildRibs(p) {
   const spacing_phases= Array.from({ length: p.n_ribs }, () => rng() * 2 * Math.PI);
 
   // Field function: radius depends ONLY on (t, angle), never on which rib.
-  // â If two ribs cross at the same (t, angle), they share r and touch exactly.
+  // → If two ribs cross at the same (t, angle), they share r and touch exactly.
   function radiusField(t, angle) {
     let r = profile(t, p.style, p.bulge_pos, p.openness) * p.max_r;
     if (p.taper_bot > 0 && t < 0.15) {
@@ -313,7 +313,7 @@ function buildRibs(p) {
       r *= 1 + p.rib_wave * 0.25 * Math.sin(t * Math.PI * p.wave_freq * 2 + angle * 2.0);
     }
     if (p.irregularity > 0) {
-      // Angle-based "organic" wobble â same field for every rib
+      // Angle-based "organic" wobble — same field for every rib
       r *= 1 + p.irregularity * 0.12 * Math.sin(angle * 3.0 + t * Math.PI * 1.7);
       r *= 1 + p.irregularity * 0.06 * Math.cos(angle * 5.0 - t * Math.PI * 2.3);
     }
@@ -350,7 +350,7 @@ function buildRibs(p) {
   return { ribs, ribAngles };
 }
 
-// âââ Three.js scene setup âââ
+// ─── Three.js scene setup ───
 const stage = document.getElementById('stage');
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -420,7 +420,7 @@ const flatFillMat = new THREE.MeshStandardMaterial({
   color: 0xd2b48c, side: THREE.DoubleSide, roughness: 0.95, metalness: 0.0,
 });
 
-// âââ Hinge-unroll a quad strip between two ribs into 2D âââ
+// ─── Hinge-unroll a quad strip between two ribs into 2D ───
 function trilaterate2D(p1, p2, r1, r2, sign) {
   const dx = p2.x - p1.x, dy = p2.y - p1.y;
   const d = Math.hypot(dx, dy);
@@ -565,7 +565,7 @@ function buildFlats(p, ribs, panelDefs) {
       rowMaxH = 0;
     }
     placements.push({ x: xOff - panel.minX, y: yOff - panel.minY });
-    xOff += panel.w; // no spacing â continuous
+    xOff += panel.w; // no spacing → continuous
     if (panel.h > rowMaxH) rowMaxH = panel.h;
   }
 
@@ -581,10 +581,10 @@ function buildFlats(p, ribs, panelDefs) {
   const cx = (gMinX + gMaxX) / 2;
   const yPlane = 0.6;
 
-  // ââ 3D rendering: lay panels in a circle on the floor around the lamp,
+  // ── 3D rendering: lay panels in a circle on the floor around the lamp,
   // each at the same angular position as its original 3D panel,
-  // "projected" straight down. ââ
-  // Compute each panel's 3D angular position (lamp coords: pt = (rÂ·cos a, z, -rÂ·sin a)).
+  // "projected" straight down. ──
+  // Compute each panel's 3D angular position (lamp coords: pt = (�·cos a, z, -r·sin a)).
   function panelAngle(panel) {
     const midJ = Math.floor((panel.def.jStart + panel.def.jEnd) / 2);
     const ra = ribs[panel.def.a][midJ];
@@ -600,7 +600,7 @@ function buildFlats(p, ribs, panelDefs) {
   // Floor radius: place panel centers just outside the lamp's XZ footprint.
   // Each panel extends panel.h/2 radially inward/outward from its center,
   // so the center must clear the lamp by at least that amount.
-  // We do NOT try to avoid angular overlap â that would push panels too far out.
+  // We do NOT try to avoid angular overlap — that would push panels too far out.
   let maxLampR = 0;
   for (let i = 0; i < ribs.length; i++) {
     for (let j = 0; j < ribs[i].length; j++) {
@@ -614,7 +614,7 @@ function buildFlats(p, ribs, panelDefs) {
     maxPanelHalfH = Math.max(maxPanelHalfH, pn.h / 2);
     maxPanelW = Math.max(maxPanelW, pn.w);
   }
-  // Ensure panels don't overlap angularly: arc between centers = floorR*(2Ï/N) > panelWidth+gap
+  // Ensure panels don't overlap angularly: arc between centers = floorR*(2π/N) > panelWidth+gap
   const floorRNoOverlap = (maxPanelW + 30) * panels.length / (2 * Math.PI);
   const floorR = Math.max(maxLampR + maxPanelHalfH + 60, floorRNoOverlap);
 
@@ -625,7 +625,7 @@ function buildFlats(p, ribs, panelDefs) {
     const pl = placements[i];
     const panel = panels[i];
 
-    // Layout-space outline (always computed, for DXF â flat row-packed grid)
+    // Layout-space outline (always computed, for DXF — flat row-packed grid)
     const outline2D = [];
     for (const pt of panel.outline) {
       const lx = pt.x + pl.x - cx;
@@ -636,7 +636,7 @@ function buildFlats(p, ribs, panelDefs) {
 
     if (!render) continue;
 
-    // ââ Circular floor placement for 3D rendering ââ
+    // ── Circular floor placement for 3D rendering ──
     // Centroid of panel in its own flat coords
     let pcx = 0, pcy = 0;
     for (const pt of panel.outline) { pcx += pt.x; pcy += pt.y; }
@@ -650,12 +650,12 @@ function buildFlats(p, ribs, panelDefs) {
     const center = { x: floorR * rx, z: floorR * rz };
 
     // Panels lie FLAT on the floor (Y=0 plane).
-    // Panel-X (width, across-rib) â tangential direction in XZ
-    // Panel-Y (height, along-rib) â radial direction outward in XZ
-    // dy â height above floor (Y axis)
+    // Panel-X (width, across-rib) → tangential direction in XZ
+    // Panel-Y (height, along-rib) → radial direction outward in XZ
+    // dy → height above floor (Y axis)
     const toWorld = (px, py, dy) => {
-      const lx = px - pcx;  // across-rib â tangential
-      const ly = py - pcy;  // along-rib â radial outward
+      const lx = px - pcx;  // across-rib → tangential
+      const ly = py - pcy;  // along-rib → radial outward
       return new THREE.Vector3(
         center.x + lx * tx + ly * rx,
         (dy || 0),
@@ -692,15 +692,15 @@ function buildFlats(p, ribs, panelDefs) {
     geo.computeVertexNormals();
     flatGroup.add(new THREE.Mesh(geo, flatFillMat));
 
-    // Panel number sprite â centered on the flat panel, above floor
+    // Panel number sprite — centered on the flat panel, above floor
     const numPos = toWorld(pcx, pcy, 20);
     const numSprite = makeTextSprite(String(i + 1), { color: '#ffffff', bg: 'rgba(255,106,74,0.9)', worldSize: Math.min(panel.h * 0.35, 35) });
     numSprite.position.copy(numPos);
     flatGroup.add(numSprite);
 
-    // Rib-pair label: e.g. "AâB" â toward outer edge of panel
+    // Rib-pair label: e.g. "A–B" — toward outer edge of panel
     const labelPos = toWorld(pcx, pcy + panel.h * 0.35, 18);
-    const labelSprite = makeTextSprite(ribLetter(panel.def.a) + 'â' + ribLetter(panel.def.b), { color: '#1a1c22', bg: 'rgba(210,180,140,0.85)', worldSize: Math.min(panel.h * 0.18, 18) });
+    const labelSprite = makeTextSprite(ribLetter(panel.def.a) + '–' + ribLetter(panel.def.b), { color: '#1a1c22', bg: 'rgba(210,180,140,0.85)', worldSize: Math.min(panel.h * 0.18, 18) });
     labelSprite.position.copy(labelPos);
     flatGroup.add(labelSprite);
   }
@@ -725,7 +725,7 @@ function buildLamp(p) {
   const n = ribs.length;
   const levels = ribs[0].length;
 
-  // Normalize angle to [0, 2Ï)
+  // Normalize angle to [0, 2π)
   const norm = a => {
     let r = a % (2 * Math.PI);
     if (r < 0) r += 2 * Math.PI;
@@ -803,7 +803,7 @@ function buildLamp(p) {
 
   buildFlats(p, ribs, panelDefs);
 
-  // Rib lengths â shown in sidebar and included in DXF
+  // Rib lengths — shown in sidebar and included in DXF
   const ribLens = ribs.map(polylineLength);
   const lenEl = document.getElementById('rib_lengths');
   if (lenEl) {
@@ -815,7 +815,7 @@ function buildLamp(p) {
   if (lastLayout) lastLayout.ribLens = ribLens;
 
   // Ribs: tube geometry along each rib curve, offset radially by rib_loc
-  // rib_loc = +1 â fully outside the surface; -1 â fully inside; 0 â centered on surface
+  // rib_loc = +1 → fully outside the surface; -1 → fully inside; 0 → centered on surface
   if (p.rib_thick > 0.05) {
     const offsetAmt = (p.rib_loc !== undefined ? p.rib_loc : 1) * (p.rib_thick / 2);
     for (const ribPts of ribs) {
@@ -833,7 +833,7 @@ function buildLamp(p) {
   }
 }
 
-// âââ Wire up sliders âââ
+// ─── Wire up sliders ───
 const ids = ['style', 'n_ribs', 'n_pts', 'height', 'max_r', 'twist_deg',
              'irregularity', 'asymmetry', 'bulge_pos', 'openness',
              'spacing_wave', 'rib_wave', 'wave_freq', 'golden_spiral',
@@ -884,7 +884,7 @@ document.getElementById('show_flats').addEventListener('change', () => {
   }
 });
 
-// âââ Camera view helpers âââ
+// ─── Camera view helpers ───
 function animateCamera(toPos, toTarget, toUp, duration) {
   duration = duration || 800;
   const startPos = camera.position.clone();
@@ -921,7 +921,7 @@ function goDefaultView() {
   );
 }
 
-// âââ DXF export âââ
+// ─── DXF export ───
 function buildDXF(layout) {
   // Minimal AutoCAD R12 DXF with LWPOLYLINE + TEXT entities
   let out = '';
@@ -978,7 +978,7 @@ function buildDXF(layout) {
     w(21, (flipY(cy) - 16).toFixed(4));
   }
 
-  // Rib length legend â placed below the layout
+  // Rib length legend — placed below the layout
   if (layout.ribLens) {
     // find min y of layout so we can place legend below it
     let minY = Infinity;
@@ -1047,7 +1047,7 @@ function tick() {
 }
 tick();
 
-// âââ AI Render (Gemini) âââ
+// ─── AI Render (Gemini) ───
 (function() {
   const KEY_LS = 'lamp_gemini_key';
   const DEFAULT_KEY = 'AIzaSyCar2N43mERwHQg2yoCZL1CC8wXOPmIA6w';
@@ -1071,7 +1071,7 @@ tick();
     modal.style.display = 'flex';
     imgEl.style.display = 'none';
     imgEl.src = '';
-    status.textContent = 'Capturing sceneâ¦';
+    status.textContent = 'Capturing scene…';
 
     // Snapshot the Three.js canvas
     try { renderer.render(scene, camera); } catch(e) {}
@@ -1081,14 +1081,14 @@ tick();
     snapEl.getContext('2d').drawImage(srcCanvas, 0, 0);
 
     try {
-      status.textContent = 'Preparing image for Geminiâ¦';
+      status.textContent = 'Preparing image for Gemini…';
       // Get base64 PNG from canvas (strip data:image/png;base64, prefix)
       const dataUrl = srcCanvas.toDataURL('image/png');
       const b64 = dataUrl.split(',')[1];
 
-      status.textContent = 'Generating photorealistic render with Geminiâ¦';
+      status.textContent = 'Generating photorealistic render with Gemini…';
       const genRes = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key=${key}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=${key}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1116,9 +1116,9 @@ tick();
       const outDataUrl = `data:${imgPart.inline_data.mime_type};base64,${imgPart.inline_data.data}`;
       imgEl.onload = () => { imgEl.style.display = 'block'; };
       imgEl.src = outDataUrl;
-      status.textContent = 'â Done â right-click image to save';
+      status.textContent = '✓ Done — right-click image to save';
     } catch (e) {
-      status.textContent = 'â ' + e.message;
+      status.textContent = '✗ ' + e.message;
       console.error('AI Render error:', e);
     }
   });
@@ -1136,8 +1136,8 @@ tick();
 <!-- AI Render modal -->
 <div id="ai_modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9999;align-items:center;justify-content:center;flex-direction:column;gap:16px;">
   <div style="position:relative;background:#1a1c22;border:1px solid #2e3040;border-radius:14px;padding:24px 20px 18px;max-width:95vmin;max-height:92vh;overflow:auto;display:flex;flex-direction:column;align-items:center;gap:14px;">
-    <button id="ai_close" style="position:absolute;top:10px;right:13px;background:none;border:none;color:#aaa;font-size:22px;line-height:1;cursor:pointer;" title="Close">â</button>
-    <h3 style="margin:0;color:#fff;font-size:14px;font-weight:700;letter-spacing:.04em;">â¨ AI RENDER</h3>
+    <button id="ai_close" style="position:absolute;top:10px;right:13px;background:none;border:none;color:#aaa;font-size:22px;line-height:1;cursor:pointer;" title="Close">✕</button>
+    <h3 style="margin:0;color:#fff;font-size:14px;font-weight:700;letter-spacing:.04em;">✨ AI RENDER</h3>
     <div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center;align-items:flex-start;">
       <div style="text-align:center;">
         <div style="font-size:10px;color:#666;margin-bottom:5px;letter-spacing:.06em;text-transform:uppercase;">3D Preview</div>
@@ -1149,7 +1149,7 @@ tick();
       </div>
     </div>
     <div id="ai_status" style="color:#bbb;font-size:12px;text-align:center;min-height:18px;font-style:italic;"></div>
-    <div style="font-size:10px;color:#444;text-align:center;line-height:1.4;">Powered by <b style="color:#666;">Google Gemini</b> Â· gemini-2.0-flash image generation<br>API key stored locally in your browser</div>
+    <div style="font-size:10px;color:#444;text-align:center;line-height:1.4;">Powered by <b style="color:#666;">Google Gemini</b> · gemini-2.0-flash image generation<br>API key stored locally in your browser</div>
   </div>
 </div>
 
